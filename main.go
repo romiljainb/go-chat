@@ -18,8 +18,8 @@ var (
 	dconns  = make(chan net.Conn)
 	msgs    = make(chan message)
 	clients = make(map[net.Conn]int)
-	peers = make(map[int]net.Conn)
-	groups = make(map[int][]net.Conn)
+	peers   = make(map[int]net.Conn)
+	groups  = make(map[int][]net.Conn)
 )
 
 
@@ -94,8 +94,13 @@ func handleConns() {
 			} else if info[0] == "g" {
 
 			} else {
+<<<<<<< HEAD
+				peers[message.sender].Write([]byte("Error parsing message info\n"))
+				fmt.Println("Error parsing message info")
+=======
                 peers[message.sender].Write([]byte("Error parsing message info\n"))
                 fmt.Println("Error parsing message info")
+>>>>>>> 63ef0d436b3ed75e79464f0e50b379bee2c7924e
 			}
 		case dconn := <-dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
