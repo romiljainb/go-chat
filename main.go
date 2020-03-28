@@ -51,12 +51,19 @@ func readConn(conn net.Conn, i int) {
 }
 
 
-func handlePeer(data []string, info []string) {
+func handlePeer(data []string, info []string, sender int) {
     rec, err := strconv.Atoi(info[1])
     if err != nil {
         fmt.Println(err)
     }
-    peers[rec].Write([]byte(data[1]))
+
+    if rec <= 0 || rec > len(peers) {
+        peers[sender].Write([]byte("Reciever is out of range\n"))
+    } else {
+
+        peers[rec].Write([]byte(data[1]))
+    }
+
 
 }
 
@@ -79,7 +86,7 @@ func handleConns() {
 			info := strings.Split(data[0], " ")
 
 			if info[0] == "p" {
-                handlePeer(data, info)
+                handlePeer(data, info, message.sender)
 			} else if info[0] == "b" {
 				for conn := range clients {
 					conn.Write([]byte(data[1]))
