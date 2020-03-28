@@ -8,14 +8,21 @@ import (
 	"strconv"
 )
 
+type message struct{
+    msg string
+    sender int
+}
+
 var (
 	conns   = make(chan net.Conn)
 	dconns  = make(chan net.Conn)
-	msgs    = make(chan string)
+	msgs    = make(chan message)
 	clients = make(map[net.Conn]int)
 	peers = make(map[int]net.Conn)
 	groups = make(map[int][]net.Conn)
 )
+
+
 
 func acceptConn(ln net.Listener) {
 	for {
@@ -28,6 +35,7 @@ func acceptConn(ln net.Listener) {
 
 }
 
+
 func readConn(conn net.Conn, i int) {
 	rd := bufio.NewReader(conn)
 	for {
@@ -36,8 +44,8 @@ func readConn(conn net.Conn, i int) {
 			break
 		}
 
-		//msgs <- fmt.Sprintf("Client %v: %v", i, m)
-		msgs <- fmt.Sprintf("%v", m)
+        mdata := message{msg: m, sender: i}
+        msgs <- mdata
 	}
 	dconns <- conn
 
@@ -56,9 +64,9 @@ func handleConns() {
 			go readConn(conn, i)
 
 		// msg must be broadcast to everyone
-		case msg := <-msgs:
+		case message := <-msgs:
 
-			data := strings.Split(strings.TrimSpace(msg), ":")
+			data := strings.Split(strings.TrimSpace(message.msg), ":")
 			info := strings.Split(data[0], " ")
 
 			fmt.Println(data)
@@ -73,7 +81,7 @@ func handleConns() {
 				peers[rec].Write([]byte(data[1]))
 			} else if info[0] == "b" {
 				for conn := range clients {
-					conn.Write([]byte(msg))
+					conn.Write([]byte(message.msg))
 				}
 			} else if info[0] == "g" {
 
