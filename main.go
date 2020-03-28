@@ -32,7 +32,6 @@ func acceptConn(ln net.Listener) {
 		}
 		conns <- conn
 	}
-
 }
 
 
@@ -86,6 +85,7 @@ func handleConns() {
 			} else if info[0] == "g" {
 
 			} else {
+                peers[message.sender].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
 			}
 		case dconn := <-dconns:
