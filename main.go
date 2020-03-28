@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -13,8 +13,8 @@ var (
 	dconns  = make(chan net.Conn)
 	msgs    = make(chan string)
 	clients = make(map[net.Conn]int)
-	peers = make(map[int]net.Conn)
-	groups = make(map[int][]net.Conn)
+	peers   = make(map[int]net.Conn)
+	groups  = make(map[int][]net.Conn)
 )
 
 func acceptConn(ln net.Listener) {
@@ -26,6 +26,15 @@ func acceptConn(ln net.Listener) {
 		conns <- conn
 	}
 
+}
+
+func joinGroup(conn net.Conn, i int) {
+	var newGrp []net.Conn
+	if newGrp == nil && groups == nil {
+		newGrp = append(newGrp, conn)
+		groups[i] = newGrp
+	}
+	//return groups
 }
 
 func readConn(conn net.Conn, i int) {
@@ -43,6 +52,12 @@ func readConn(conn net.Conn, i int) {
 
 }
 
+// p 1: hi there
+// p 3: hi there back
+// b : megs to all
+// g 2: hi all in group 2
+// j 2:
+
 func handleConns() {
 	i := 0
 
@@ -53,6 +68,7 @@ func handleConns() {
 			clients[conn] = i
 			i++
 			peers[i] = conn
+
 			go readConn(conn, i)
 
 		// msg must be broadcast to everyone
@@ -76,6 +92,11 @@ func handleConns() {
 					conn.Write([]byte(msg))
 				}
 			} else if info[0] == "g" {
+
+			} else if info[0] == "j" {
+
+				joinGroup(conn, i)
+				fmt.Println("created a group ", groups)
 
 			} else {
 				fmt.Println("Error parsing message info")
