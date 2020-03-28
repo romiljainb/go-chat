@@ -18,8 +18,8 @@ var (
 	dconns  = make(chan net.Conn)
 	msgs    = make(chan message)
 	clients = make(map[net.Conn]int)
-	peers = make(map[int]net.Conn)
-	groups = make(map[int][]net.Conn)
+	peers   = make(map[int]net.Conn)
+	groups  = make(map[int][]net.Conn)
 )
 
 
@@ -85,7 +85,7 @@ func handleConns() {
 			} else if info[0] == "g" {
 
 			} else {
-                peers[message.sender].Write([]byte("Error parsing message info\n"))
+				peers[message.sender].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
 			}
 		case dconn := <-dconns:
