@@ -61,9 +61,17 @@ func handlePeer(data []string, info []string, sender int) {
         peers[sender].Write([]byte("Reciever is out of range\n"))
     } else {
 
-        peers[rec].Write([]byte(data[1]))
+        msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+        peers[rec].Write([]byte(msg))
     }
 
+}
+
+func handleBroadcast(data []string, sender int){
+    msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+    for conn := range clients {
+        conn.Write([]byte(msg))
+    }
 
 }
 
@@ -88,19 +96,12 @@ func handleConns() {
 			if info[0] == "p" {
                 handlePeer(data, info, message.sender)
 			} else if info[0] == "b" {
-				for conn := range clients {
-					conn.Write([]byte(data[1]))
-				}
+                handleBroadcast(data, message.sender)
 			} else if info[0] == "g" {
 
 			} else {
-<<<<<<< HEAD
 				peers[message.sender].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
-=======
-                peers[message.sender].Write([]byte("Error parsing message info\n"))
-                fmt.Println("Error parsing message info")
->>>>>>> 63ef0d436b3ed75e79464f0e50b379bee2c7924e
 			}
 		case dconn := <-dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
