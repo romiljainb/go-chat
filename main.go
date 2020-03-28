@@ -50,6 +50,16 @@ func readConn(conn net.Conn, i int) {
 
 }
 
+
+func handlePeer(data []string, info []string) {
+    rec, err := strconv.Atoi(info[1])
+    if err != nil {
+        fmt.Println(err)
+    }
+    peers[rec].Write([]byte(data[1]))
+
+}
+
 func handleConns() {
 	i := 0
 
@@ -68,25 +78,17 @@ func handleConns() {
 			data := strings.Split(strings.TrimSpace(message.msg), ":")
 			info := strings.Split(data[0], " ")
 
-			fmt.Println(data)
-			fmt.Println(info)
-
 			if info[0] == "p" {
-				fmt.Println(data[1])
-				rec, err := strconv.Atoi(info[1])
-				if err != nil {
-					fmt.Println(err)
-				}
-				peers[rec].Write([]byte(data[1]))
+                handlePeer(data, info)
 			} else if info[0] == "b" {
 				for conn := range clients {
-					conn.Write([]byte(message.msg))
+					conn.Write([]byte(data[1]))
 				}
 			} else if info[0] == "g" {
 
 			} else {
                 peers[message.sender].Write([]byte("Error parsing message info\n"))
-				fmt.Println("Error parsing message info")
+                fmt.Println("Error parsing message info")
 			}
 		case dconn := <-dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
