@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strings"
+	"strconv"
 )
 
 var (
@@ -11,8 +13,8 @@ var (
 	dconns  = make(chan net.Conn)
 	msgs    = make(chan string)
 	clients = make(map[net.Conn]int)
-	//peers = make(map[int]net.Conn)
-	//groups = make(map[int][]net.Conn)
+	peers = make(map[int]net.Conn)
+	groups = make(map[int][]net.Conn)
 )
 
 func acceptConn(ln net.Listener) {
@@ -34,7 +36,8 @@ func readConn(conn net.Conn, i int) {
 			break
 		}
 
-		msgs <- fmt.Sprintf("Client %v: %v", i, m)
+		//msgs <- fmt.Sprintf("Client %v: %v", i, m)
+		msgs <- fmt.Sprintf("%v", m)
 	}
 	dconns <- conn
 
@@ -49,12 +52,33 @@ func handleConns() {
 		case conn := <-conns:
 			clients[conn] = i
 			i++
+			peers[i] = conn
 			go readConn(conn, i)
 
 		// msg must be broadcast to everyone
 		case msg := <-msgs:
-			for conn := range clients {
-				conn.Write([]byte(msg))
+
+			data := strings.Split(strings.TrimSpace(msg), ":")
+			info := strings.Split(data[0], " ")
+
+			fmt.Println(data)
+			fmt.Println(info)
+
+			if info[0] == "p" {
+				fmt.Println(data[1])
+				rec, err := strconv.Atoi(info[1])
+				if err != nil {
+					fmt.Println(err)
+				}
+				peers[rec].Write([]byte(data[1]))
+			} else if info[0] == "b" {
+				for conn := range clients {
+					conn.Write([]byte(msg))
+				}
+			} else if info[0] == "g" {
+
+			} else {
+				fmt.Println("Error parsing message info")
 			}
 		case dconn := <-dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
