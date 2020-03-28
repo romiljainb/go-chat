@@ -1,2 +1,2 @@
 # lets-go
-#edit readme
+Exploring Golang
