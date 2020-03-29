@@ -20,6 +20,7 @@ type message struct {
 }
 
 type ConnectionManager interface {
+
 }
 
 type Manager struct {
@@ -159,9 +160,10 @@ func main() {
 	ip := flag.String("ip", "127.0.0.1", "a ip string")
 	serverType := flag.String("type", "tcp", "a server type string")
 
-	ipPort := *ip + ":" + strconv.Itoa(*port)
-
-	ln, err := net.Listen(*serverType, ipPort)
+	serverAddr := *ip + ":" + strconv.Itoa(*port)
+	
+	ln, err := net.Listen(*serverType, serverAddr)
+  
 	if err != nil {
 		fmt.Println("Error starting server", err.Error())
 	}

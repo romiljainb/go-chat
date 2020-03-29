@@ -6,6 +6,8 @@ import (
     "os"
     "bufio"
     "strings"
+    "strconv"
+    "flag"
 )
 
 /*
@@ -35,13 +37,21 @@ func main() {
 
 func runClient() {
 
-    serverAddr := "127.0.0.1:8080"
-    con, error := net.Dial("tcp", serverAddr)
+
+    port := flag.Int("port", 8080, "a port number")
+	ip := flag.String("ip", "127.0.0.1", "a ip string")
+	serverType := flag.String("type", "tcp", "a server type string")
+	
+
+    serverAddr := *ip + ":" + strconv.Itoa(*port)
+
+    con, error := net.Dial(*serverType, serverAddr)
     if error != nil {
         fmt.Println(error)
         return
     }
-    fmt.Println("Connected to 127.0.0.1:8080.")
+    
+    fmt.Println("Connected to %s", serverAddr)
 
 
     for {
