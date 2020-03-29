@@ -17,7 +17,6 @@ var (
 type UserMgr struct {
     users map[string]User
     groups map[string][]User
-
 }
 
 type UserMgrInterface interface {
@@ -54,13 +53,18 @@ func handleConns() {
 			if len(strings.TrimSpace(message.msg)) == 0 {
 				continue
 			}
+
+            client := message.sender
+
 			data := strings.Split(strings.TrimSpace(message.msg), ":")
 			info := strings.Split(data[0], " ")
 
 			if info[0] == "p" {
-				handlePeer(data, info, message.sender)
+                client.sendToPeer(data, info)
+				//handlePeer(data, info, message.sender)
 			} else if info[0] == "b" {
-				handleBroadcast(data, message.sender)
+				//handleBroadcast(data, message.sender)
+                client.broadcast(data)
 			} else if info[0] == "g" {
 				sendToGrp(data, info, message.sender)
 
