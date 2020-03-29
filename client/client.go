@@ -1,9 +1,10 @@
-package client
+package main
 
 import (
 	"net"
-	"fmt"
-	"encoding/gob"
+    "fmt"
+    "os"
+    "bufio"
 )
 
 /*
@@ -22,6 +23,11 @@ import (
 
 */
 
+type Client struct {
+    Name string
+    Msg string
+}
+
 func main() {
 
 	runClient()
@@ -29,25 +35,21 @@ func main() {
 
 func runClient() {
     // Connects to server
-    con, error := net.Dial("tcp", "127.0.0.1:8272")
-
-    // Handles eventual errors
+    con, error := net.Dial("tcp", "127.0.0.1:8080")
     if error != nil {
         fmt.Println(error)
         return
     }
-
     fmt.Println("Connected to 127.0.0.1:8080.")
 
-    // Sends a message
-    message := "Hello world"
-    encoder := gob.NewEncoder(con)
-    error = encoder.Encode(message)
 
-    // Checks for errors
-    if error != nil {
-        fmt.Println(error)
-    }
+    reader := bufio.NewReader(os.Stdin)
+    message, _ := reader.ReadString('\n')
+
+    message = "b :" + message
+    clientUser := Client{Name: "User", Msg: message}
+
+    con.Write([]byte(clientUser.Msg))
 
     con.Close()
 
