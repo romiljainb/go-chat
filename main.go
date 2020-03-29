@@ -176,7 +176,6 @@ func sendToGrp(data []string, info []string, sender User) {
 		fmt.Println("group doesn't exist" + "\n")
 		sender.uconn.Write([]byte("group doesn't exist" + "\n"))
 	} else {
-<<<<<<< HEAD
 		value, ok := groups[rec]
 		if ok {
 			if existIn(value, sender.uconn) == true {
@@ -186,13 +185,6 @@ func sendToGrp(data []string, info []string, sender User) {
 				}
 			} else {
 				sender.uconn.Write([]byte("not member of group" + "\n"))
-
-=======
-		if existIn(groups[rec], sender.uconn) == true {
-			msg := "User " + strconv.Itoa(sender.ID) + " : " + data[1] + "\n"
-			for _, receiver := range groups[rec] {
-				receiver.Write([]byte(msg))
->>>>>>> e1fb3e599763e6a4d8b5555afebec7a8716e7b25
 			}
 
 		} else {
