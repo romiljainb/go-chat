@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -56,11 +57,29 @@ func readConn(conn net.Conn, i int) {
 
 }
 
-// p 1: hi there
-// p 3: hi there back
-// b : megs to all
-// g 2: hi all in group 2
-// j 2:
+func handlePeer(data []string, info []string, sender int) {
+	rec, err := strconv.Atoi(info[1])
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if rec <= 0 || rec > len(peers) {
+		peers[sender].Write([]byte("Reciever is out of range\n"))
+	} else {
+
+		msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+		peers[rec].Write([]byte(msg))
+	}
+
+}
+
+func handleBroadcast(data []string, sender int) {
+	msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+	for conn := range clients {
+		conn.Write([]byte(msg))
+	}
+
+}
 
 func handleConns() {
 	i := 0
@@ -84,9 +103,7 @@ func handleConns() {
 			if info[0] == "p" {
 				handlePeer(data, info, message.sender)
 			} else if info[0] == "b" {
-				for conn := range clients {
-					conn.Write([]byte(data[1]))
-				}
+				handleBroadcast(data, message.sender)
 			} else if info[0] == "g" {
 
 			} else if info[0] == "j" {
