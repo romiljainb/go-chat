@@ -95,6 +95,29 @@ func handlePeer(data []string, info []string, sender int) {
 
 }
 
+func sendToGrp(data []string, info []string, sender int, conn net.Conn) {
+	rec, err := strconv.Atoi(info[1])
+	if err != nil {
+		fmt.Println(err)
+	}
+	if rec <= 0 || rec > len(groups) {
+		fmt.Println("group doesn't exist")
+		conn.Write([]byte("group doesn't exist"))
+	} else {
+		if existIn(groups[rec], conn) == true {
+			msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+			for _, receiver := range groups[rec] {
+				receiver.Write([]byte(msg))
+			}
+		} else {
+			conn.Write([]byte("not member of group"))
+
+		}
+
+	}
+
+}
+
 func handleBroadcast(data []string, sender int) {
 	msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
 	for conn := range clients {
@@ -127,6 +150,7 @@ func handleConns() {
 			} else if info[0] == "b" {
 				handleBroadcast(data, message.sender)
 			} else if info[0] == "g" {
+				sendToGrp(data, info, message.sender, message.connection)
 
 			} else if info[0] == "j" {
 				groupID, err := strconv.Atoi(info[1])
@@ -134,9 +158,6 @@ func handleConns() {
 					fmt.Println("error occured", err)
 				}
 				joinGroup(message.connection, groupID)
-
-				//fmt.Println("error occured", err)
-
 			} else {
 				peers[message.sender].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
