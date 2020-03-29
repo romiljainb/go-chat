@@ -14,6 +14,14 @@ type message struct{
     sender int
 }
 
+type ConnectionManager interface {
+	
+}
+
+type Manager struct {
+
+}
+
 var (
 	conns   = make(chan net.Conn)
 	dconns  = make(chan net.Conn)
