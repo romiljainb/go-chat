@@ -31,9 +31,6 @@ type Client struct {
     Msg string
 }
 
-func main() {
-	runClient()
-}
 
 func runClient() {
 
@@ -41,7 +38,6 @@ func runClient() {
     port := flag.Int("port", 8080, "a port number")
 	ip := flag.String("ip", "127.0.0.1", "a ip string")
 	serverType := flag.String("type", "tcp", "a server type string")
-	
 
     serverAddr := *ip + ":" + strconv.Itoa(*port)
 
@@ -50,9 +46,11 @@ func runClient() {
         fmt.Println(error)
         return
     }
-    
+
     fmt.Println("Connected to %s", serverAddr)
 
+    //TODO
+    //goroutine to recieve incoming messages 
 
     for {
         reader := bufio.NewReader(os.Stdin)
@@ -71,4 +69,8 @@ func runClient() {
 
     con.Close()
     fmt.Printf("Connection to server %s closed.\n", serverAddr)
+}
+
+func main() {
+	runClient()
 }
