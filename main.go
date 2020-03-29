@@ -86,6 +86,38 @@ func joinGroup(conn net.Conn, i int) {
 	}
 }
 
+func leaveGroup(conn net.Conn, i int) {
+	value, ok := groups[i]
+	if ok {
+		for index, val := range value {
+			if val == conn {
+
+				value[len(value)-1], value[index] = value[index], value[len(value)-1]
+				value = value[:len(value)-1]
+				fmt.Println(value)
+				conn.Write([]byte("you left group" + "\n"))
+				sendMsgToAll(value, conn, clients[conn])
+				break
+
+			} else {
+				fmt.Println("not a member of this group" + "\n")
+			}
+
+		}
+
+	} else {
+		fmt.Println("group doesnt exist" + "\n")
+	}
+
+}
+
+func sendMsgToAll(clients []net.Conn, client net.Conn, clientID int) {
+	for _, conn := range clients {
+		conn.Write([]byte(strconv.Itoa(clientID) + " has left this group" + "\n"))
+	}
+
+}
+
 func existIn(memList []net.Conn, conn net.Conn) bool {
 	for _, val := range memList {
 		if val == conn {
@@ -140,18 +172,31 @@ func sendToGrp(data []string, info []string, sender User) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	if rec <= 0 || rec > len(groups) {
-		fmt.Println("group doesn't exist")
-		sender.uconn.Write([]byte("group doesn't exist"))
+	if rec <= 0 {
+		fmt.Println("group doesn't exist" + "\n")
+		sender.uconn.Write([]byte("group doesn't exist" + "\n"))
 	} else {
+<<<<<<< HEAD
+		value, ok := groups[rec]
+		if ok {
+			if existIn(value, sender.uconn) == true {
+				msg := sender.name + " : " + data[1] + "\n"
+				for _, receiver := range groups[rec] {
+					receiver.Write([]byte(msg))
+				}
+			} else {
+				sender.uconn.Write([]byte("not member of group" + "\n"))
+
+=======
 		if existIn(groups[rec], sender.uconn) == true {
 			msg := "User " + strconv.Itoa(sender.ID) + " : " + data[1] + "\n"
 			for _, receiver := range groups[rec] {
 				receiver.Write([]byte(msg))
+>>>>>>> e1fb3e599763e6a4d8b5555afebec7a8716e7b25
 			}
-		} else {
-			sender.uconn.Write([]byte("not member of group"))
 
+		} else {
+			//sender.uconn.Write([]byte("group doesn't exist" + "\n"))
 		}
 
 	}
@@ -223,6 +268,12 @@ func handleConns() {
 					fmt.Println("error occured", err)
 				}
 				joinGroup(message.sender.uconn, groupID)
+			} else if info[0] == "l" {
+				groupID, err := strconv.Atoi(info[1])
+				if err != nil {
+					fmt.Println("error occured", err)
+				}
+				leaveGroup(message.sender.uconn, groupID)
 			} else {
 				peers[message.sender.ID].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
