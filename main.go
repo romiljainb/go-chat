@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 	"strconv"
+	"flag"
 )
 
 type message struct{
@@ -113,14 +114,18 @@ func handleConns() {
 			fmt.Println("Clinet %v logged off", clients[dconn])
 			delete(clients, dconn)
 		}
-
 	}
-
 }
 
 func main() {
 
-	ln, err := net.Listen("tcp", "127.0.0.1:8080")
+	port := flag.Int("port", 8080, "a port number")
+	ip := flag.String("ip", "127.0.0.1", "a ip string")
+	serverType := flag.String("type", "tcp", "a server type string")
+	
+	ipPort := *ip + ":" + strconv.Itoa(*port)
+	
+	ln, err := net.Listen(*serverType, ipPort)
 	if err != nil {
 		fmt.Println("Error starting server", err.Error())
 	}

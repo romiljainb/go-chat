@@ -17,6 +17,8 @@ import (
 8. TCP network configuration
 9. Cli for client app
 10. client name 
+11. ci/cd -> travis
+12. memcache
 
 */
 
