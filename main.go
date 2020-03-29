@@ -2,16 +2,27 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
 )
 
+type client struct {
+	name  string
+	ID    int
+	uconn net.Conn
+}
 type message struct {
-	msg        string
-	sender     int
-	connection net.Conn
+	msg    string
+	sender client
+}
+
+type ConnectionManager interface {
+}
+
+type Manager struct {
 }
 
 var (
@@ -20,6 +31,7 @@ var (
 	msgs    = make(chan message)
 	clients = make(map[net.Conn]int)
 	peers   = make(map[int]net.Conn)
+	users   = make(map[client]bool)
 	groups  = make(map[int][]net.Conn)
 )
 
@@ -64,7 +76,7 @@ func existIn(memList []net.Conn, conn net.Conn) bool {
 	return false
 }
 
-func readConn(conn net.Conn, i int) {
+func readConn(conn net.Conn, user client) {
 	rd := bufio.NewReader(conn)
 	for {
 		m, err := rd.ReadString('\n')
@@ -72,108 +84,146 @@ func readConn(conn net.Conn, i int) {
 			break
 		}
 
-		mdata := message{msg: m, sender: i, connection: conn}
+		mdata := message{msg: m, sender: user}
 		msgs <- mdata
 	}
 	dconns <- conn
 
 }
 
-func handlePeer(data []string, info []string, sender int) {
+func handlePeer(data []string, info []string, sender client) {
 	rec, err := strconv.Atoi(info[1])
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	if rec <= 0 || rec > len(peers) {
-		peers[sender].Write([]byte("Reciever is out of range\n"))
+		peers[sender.ID].Write([]byte("Reciever is out of range\n"))
 	} else {
 
-		msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+		msg := sender.name + ": " + data[1] + "\n"
 		peers[rec].Write([]byte(msg))
 	}
 
 }
 
-func sendToGrp(data []string, info []string, sender int, conn net.Conn) {
-	rec, err := strconv.Atoi(info[1])
-	if err != nil {
-		fmt.Println(err)
-	}
-	if rec <= 0 || rec > len(groups) {
-		fmt.Println("group doesn't exist")
-		conn.Write([]byte("group doesn't exist"))
-	} else {
-		if existIn(groups[rec], conn) == true {
-			msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
-			for _, receiver := range groups[rec] {
-				receiver.Write([]byte(msg))
-			}
-		} else {
-			conn.Write([]byte("not member of group"))
-
-		}
-
-	}
-
-}
-
-func handleBroadcast(data []string, sender int) {
-	msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+func handleBroadcast(data []string, sender client) {
+	msg := sender.name + ": " + data[1] + "\n"
 	for conn := range clients {
 		conn.Write([]byte(msg))
 	}
 
 }
 
-func handleConns() {
-	i := 0
-
-	for {
-		select {
-		// read the incoming messages
-		case conn := <-conns:
-			clients[conn] = i
-			i++
-			peers[i] = conn
-
-			go readConn(conn, i)
-
-		// msg must be broadcast to everyone
-		case message := <-msgs:
-
-			data := strings.Split(strings.TrimSpace(message.msg), ":") //j 2
-			info := strings.Split(data[0], " ")                        //[j,2]
-
-			if info[0] == "p" {
-				handlePeer(data, info, message.sender)
-			} else if info[0] == "b" {
-				handleBroadcast(data, message.sender)
-			} else if info[0] == "g" {
-				sendToGrp(data, info, message.sender, message.connection)
-
-			} else if info[0] == "j" {
-				groupID, err := strconv.Atoi(info[1])
-				if err != nil {
-					fmt.Println("error occured", err)
-				}
-				joinGroup(message.connection, groupID)
-			} else {
-				peers[message.sender].Write([]byte("Error parsing message info\n"))
-				fmt.Println("Error parsing message info")
+func sendToGrp(data []string, info []string, sender client) {
+	rec, err := strconv.Atoi(info[1])
+	if err != nil {
+		fmt.Println(err)
+	}
+	if rec <= 0 || rec > len(groups) {
+		fmt.Println("group doesn't exist")
+		sender.uconn.Write([]byte("group doesn't exist"))
+	} else {
+		if existIn(groups[rec], sender.uconn) == true {
+			msg := "Client " + strconv.Itoa(sender.ID) + " : " + data[1] + "\n"
+			for _, receiver := range groups[rec] {
+				receiver.Write([]byte(msg))
 			}
-		case dconn := <-dconns:
-			fmt.Println("Clinet %v logged off", clients[dconn])
-			delete(clients, dconn)
+		} else {
+			sender.uconn.Write([]byte("not member of group"))
+
 		}
 
 	}
 
 }
 
+func getUserDetails(conn net.Conn, id int) (client, bool) {
+	rd := bufio.NewReader(conn)
+	var user client
+	for i := 0; i < 3; i++ {
+		conn.Write([]byte("Enter an username: \n"))
+		m, err := rd.ReadString('\n')
+		if err != nil {
+			break
+		}
+		pname := strings.TrimSpace(m)
+
+		if len(pname) > 0 {
+			user = client{name: pname, ID: id, uconn: conn}
+			users[user] = true
+			return user, true
+		}
+
+	}
+	return user, false
+
+}
+
+func createUser(conn net.Conn, id int) {
+	user, created := getUserDetails(conn, id)
+	if created {
+		clients[conn] = id
+		peers[id] = conn
+		go readConn(conn, user)
+	}
+
+}
+func handleConns() {
+	i := 1
+
+	for {
+		select {
+		// read the incoming messages
+		case conn := <-conns:
+			_, exist := clients[conn]
+			if !exist {
+				createUser(conn, i)
+				i++
+			}
+
+		// msg must be broadcast to everyone
+		case message := <-msgs:
+			if len(strings.TrimSpace(message.msg)) == 0 {
+				continue
+			}
+			data := strings.Split(strings.TrimSpace(message.msg), ":")
+			info := strings.Split(data[0], " ")
+
+			if info[0] == "p" {
+				handlePeer(data, info, message.sender)
+			} else if info[0] == "b" {
+				handleBroadcast(data, message.sender)
+			} else if info[0] == "g" {
+				sendToGrp(data, info, message.sender)
+
+			} else if info[0] == "j" {
+				groupID, err := strconv.Atoi(info[1])
+				if err != nil {
+					fmt.Println("error occured", err)
+				}
+				joinGroup(message.sender.uconn, groupID)
+			} else {
+				peers[message.sender.ID].Write([]byte("Error parsing message info\n"))
+				fmt.Println("Error parsing message info")
+			}
+		case dconn := <-dconns:
+			fmt.Println("Clinet %v logged off", clients[dconn])
+			delete(clients, dconn)
+		}
+	}
+}
+
 func main() {
 
-	ln, err := net.Listen("tcp", "127.0.0.1:8080")
+	port := flag.Int("port", 8080, "a port number")
+	ip := flag.String("ip", "127.0.0.1", "a ip string")
+	serverType := flag.String("type", "tcp", "a server type string")
+
+	serverAddr := *ip + ":" + strconv.Itoa(*port)
+
+	ln, err := net.Listen(*serverType, serverAddr)
+
 	if err != nil {
 		fmt.Println("Error starting server", err.Error())
 	}

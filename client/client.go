@@ -1,9 +1,13 @@
-package client
+package main
 
 import (
 	"net"
-	"fmt"
-	"encoding/gob"
+    "fmt"
+    "os"
+    "bufio"
+    "strings"
+    "strconv"
+    "flag"
 )
 
 /*
@@ -16,38 +20,55 @@ import (
 7. TLS
 8. TCP network configuration
 9. Cli for client app
-10. 
+10. client name 
+11. ci/cd -> travis
+12. memcache
 
 */
 
-func main() {
+type Client struct {
+    Name string
+    Msg string
+}
 
+func main() {
 	runClient()
 }
 
 func runClient() {
-    // Connects to server
-    con, error := net.Dial("tcp", "127.0.0.1:8272")
 
-    // Handles eventual errors
+
+    port := flag.Int("port", 8080, "a port number")
+	ip := flag.String("ip", "127.0.0.1", "a ip string")
+	serverType := flag.String("type", "tcp", "a server type string")
+	
+
+    serverAddr := *ip + ":" + strconv.Itoa(*port)
+
+    con, error := net.Dial(*serverType, serverAddr)
     if error != nil {
         fmt.Println(error)
         return
     }
+    
+    fmt.Println("Connected to %s", serverAddr)
 
-    fmt.Println("Connected to 127.0.0.1:8080.")
 
-    // Sends a message
-    message := "Hello world"
-    encoder := gob.NewEncoder(con)
-    error = encoder.Encode(message)
+    for {
+        reader := bufio.NewReader(os.Stdin)
+        message, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Println("Error Reading stdin line, please try again")
+        }
 
-    // Checks for errors
-    if error != nil {
-        fmt.Println(error)
+        if strings.HasPrefix(message,"quit()") {
+            break
+        }
+
+        clientUser := Client{Name: "User", Msg: message}
+        con.Write([]byte(clientUser.Msg))
     }
 
     con.Close()
-
-    fmt.Println("Message sent. Connection closed.")
+    fmt.Printf("Connection to server %s closed.\n", serverAddr)
 }
