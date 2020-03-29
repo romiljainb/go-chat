@@ -102,7 +102,6 @@ func getUserDetails(conn net.Conn, id int) (client, bool) {
 		}
 
 	}
-	dconns <- conn
 	return user, false
 
 }
