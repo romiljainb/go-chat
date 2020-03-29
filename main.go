@@ -86,7 +86,7 @@ func handleConns() {
 
 			} else {
                 peers[message.sender].Write([]byte("Error parsing message info\n"))
-				fmt.Println("Error parsing message info")
+                fmt.Println("Error parsing message info")
 			}
 		case dconn := <-dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
