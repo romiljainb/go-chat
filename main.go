@@ -26,6 +26,7 @@ func acceptConn(ln net.Listener) {
 }
 
 
+
 func readConn(conn net.Conn, user User) {
 	rd := bufio.NewReader(conn)
 	for {
@@ -40,6 +41,8 @@ func readConn(conn net.Conn, user User) {
 	dconns <- conn
 
 }
+
+
 
 func main() {
 
