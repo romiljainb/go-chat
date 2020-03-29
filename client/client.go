@@ -30,15 +30,12 @@ type Client struct {
 }
 
 func main() {
-
 	runClient()
 }
 
 func runClient() {
-    // Connects to server
 
     serverAddr := "127.0.0.1:8080"
-
     con, error := net.Dial("tcp", serverAddr)
     if error != nil {
         fmt.Println(error)
