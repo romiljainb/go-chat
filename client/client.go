@@ -5,6 +5,7 @@ import (
     "fmt"
     "os"
     "bufio"
+    "strings"
 )
 
 /*
@@ -35,7 +36,10 @@ func main() {
 
 func runClient() {
     // Connects to server
-    con, error := net.Dial("tcp", "127.0.0.1:8080")
+
+    serverAddr := "127.0.0.1:8080"
+
+    con, error := net.Dial("tcp", serverAddr)
     if error != nil {
         fmt.Println(error)
         return
@@ -43,15 +47,21 @@ func runClient() {
     fmt.Println("Connected to 127.0.0.1:8080.")
 
 
-    reader := bufio.NewReader(os.Stdin)
-    message, _ := reader.ReadString('\n')
+    for {
+        reader := bufio.NewReader(os.Stdin)
+        message, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Println("Error Reading stdin line, please try again")
+        }
 
-    message = "b :" + message
-    clientUser := Client{Name: "User", Msg: message}
+        if strings.HasPrefix(message,"quit()") {
+            break
+        }
 
-    con.Write([]byte(clientUser.Msg))
+        clientUser := Client{Name: "User", Msg: message}
+        con.Write([]byte(clientUser.Msg))
+    }
 
     con.Close()
-
-    fmt.Println("Message sent. Connection closed.")
+    fmt.Printf("Connection to server %s closed.\n", serverAddr)
 }
