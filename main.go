@@ -9,14 +9,34 @@ import (
 	"strings"
 )
 
-type client struct {
+type User struct {
 	name  string
 	ID    int
 	uconn net.Conn
 }
-type message struct {
+
+type Message struct {
 	msg    string
-	sender client
+	sender User
+}
+
+type UserMgr struct {
+    users map[string]User
+    groups map[string][]User
+
+}
+
+type UserInterface interface {
+    broadcast()
+    sendToPeer(peer string)
+    leaveGroup(group string)
+    joinGroup(group string)
+}
+
+type UserMgrInterface interface {
+    addUser(user User)
+    removeUser(user User)
+    getUser(name string) User
 }
 
 type ConnectionManager interface {
@@ -28,10 +48,10 @@ type Manager struct {
 var (
 	conns   = make(chan net.Conn)
 	dconns  = make(chan net.Conn)
-	msgs    = make(chan message)
+	msgs    = make(chan Message)
 	clients = make(map[net.Conn]int)
 	peers   = make(map[int]net.Conn)
-	users   = make(map[client]bool)
+	users   = make(map[User]bool)
 	groups  = make(map[int][]net.Conn)
 )
 
@@ -76,7 +96,7 @@ func existIn(memList []net.Conn, conn net.Conn) bool {
 	return false
 }
 
-func readConn(conn net.Conn, user client) {
+func readConn(conn net.Conn, user User) {
 	rd := bufio.NewReader(conn)
 	for {
 		m, err := rd.ReadString('\n')
@@ -84,14 +104,14 @@ func readConn(conn net.Conn, user client) {
 			break
 		}
 
-		mdata := message{msg: m, sender: user}
+		mdata := Message{msg: m, sender: user}
 		msgs <- mdata
 	}
 	dconns <- conn
 
 }
 
-func handlePeer(data []string, info []string, sender client) {
+func handlePeer(data []string, info []string, sender User) {
 	rec, err := strconv.Atoi(info[1])
 	if err != nil {
 		fmt.Println(err)
@@ -107,7 +127,7 @@ func handlePeer(data []string, info []string, sender client) {
 
 }
 
-func handleBroadcast(data []string, sender client) {
+func handleBroadcast(data []string, sender User) {
 	msg := sender.name + ": " + data[1] + "\n"
 	for conn := range clients {
 		conn.Write([]byte(msg))
@@ -115,7 +135,7 @@ func handleBroadcast(data []string, sender client) {
 
 }
 
-func sendToGrp(data []string, info []string, sender client) {
+func sendToGrp(data []string, info []string, sender User) {
 	rec, err := strconv.Atoi(info[1])
 	if err != nil {
 		fmt.Println(err)
@@ -125,7 +145,7 @@ func sendToGrp(data []string, info []string, sender client) {
 		sender.uconn.Write([]byte("group doesn't exist"))
 	} else {
 		if existIn(groups[rec], sender.uconn) == true {
-			msg := "Client " + strconv.Itoa(sender.ID) + " : " + data[1] + "\n"
+			msg := "User " + strconv.Itoa(sender.ID) + " : " + data[1] + "\n"
 			for _, receiver := range groups[rec] {
 				receiver.Write([]byte(msg))
 			}
@@ -138,9 +158,9 @@ func sendToGrp(data []string, info []string, sender client) {
 
 }
 
-func getUserDetails(conn net.Conn, id int) (client, bool) {
+func getUserDetails(conn net.Conn, id int) (User, bool) {
 	rd := bufio.NewReader(conn)
-	var user client
+	var user User
 	for i := 0; i < 3; i++ {
 		conn.Write([]byte("Enter an username: \n"))
 		m, err := rd.ReadString('\n')
@@ -150,7 +170,7 @@ func getUserDetails(conn net.Conn, id int) (client, bool) {
 		pname := strings.TrimSpace(m)
 
 		if len(pname) > 0 {
-			user = client{name: pname, ID: id, uconn: conn}
+			user = User{name: pname, ID: id, uconn: conn}
 			users[user] = true
 			return user, true
 		}
@@ -174,7 +194,7 @@ func handleConns() {
 
 	for {
 		select {
-		// read the incoming messages
+		// read the incoming Messages
 		case conn := <-conns:
 			_, exist := clients[conn]
 			if !exist {
