@@ -35,11 +35,33 @@ func acceptConn(ln net.Listener) {
 
 func joinGroup(conn net.Conn, i int) {
 	var newGrp []net.Conn
-	if newGrp == nil && groups == nil {
+	value, ok := groups[i]
+	if ok {
+		if existIn(value, conn) == false {
+			groups[i] = append(groups[i], conn)
+			fmt.Println("Joined a group ", groups)
+		} else {
+			fmt.Println("already member of: ", groups)
+		}
+
+	} else {
 		newGrp = append(newGrp, conn)
 		groups[i] = newGrp
+		for _, value = range groups {
+			fmt.Println(value)
+		}
+		fmt.Println("you have created new group ", groups)
 	}
-	//return groups
+}
+
+func existIn(memList []net.Conn, conn net.Conn) bool {
+	for _, val := range memList {
+		if val == conn {
+			return true
+		}
+
+	}
+	return false
 }
 
 func readConn(conn net.Conn, i int) {
@@ -97,8 +119,8 @@ func handleConns() {
 		// msg must be broadcast to everyone
 		case message := <-msgs:
 
-			data := strings.Split(strings.TrimSpace(message.msg), ":")
-			info := strings.Split(data[0], " ")
+			data := strings.Split(strings.TrimSpace(message.msg), ":") //j 2
+			info := strings.Split(data[0], " ")                        //[j,2]
 
 			if info[0] == "p" {
 				handlePeer(data, info, message.sender)
@@ -107,9 +129,13 @@ func handleConns() {
 			} else if info[0] == "g" {
 
 			} else if info[0] == "j" {
+				groupID, err := strconv.Atoi(info[1])
+				if err != nil {
+					fmt.Println("error occured", err)
+				}
+				joinGroup(message.connection, groupID)
 
-				joinGroup(message.connection, i)
-				fmt.Println("created a group ", groups)
+				//fmt.Println("error occured", err)
 
 			} else {
 				peers[message.sender].Write([]byte("Error parsing message info\n"))
