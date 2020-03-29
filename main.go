@@ -82,14 +82,20 @@ func handleConns() {
 		select {
 		// read the incoming messages
 		case conn := <-conns:
-			clients[conn] = i
-			i++
-			peers[i] = conn
-			go readConn(conn, i)
+            _, exist := clients[conn]
+            if !exist {
+                clients[conn] = i
+                i++
+                peers[i] = conn
+                go readConn(conn, i)
+            }
 
 		// msg must be broadcast to everyone
 		case message := <-msgs:
-
+            fmt.Println(message.msg)
+            if len(strings.TrimSpace(message.msg)) == 0{
+                continue
+            }
 			data := strings.Split(strings.TrimSpace(message.msg), ":")
 			info := strings.Split(data[0], " ")
 
