@@ -18,8 +18,8 @@ var (
 	dconns  = make(chan net.Conn)
 	msgs    = make(chan message)
 	clients = make(map[net.Conn]int)
-	peers = make(map[int]net.Conn)
-	groups = make(map[int][]net.Conn)
+	peers   = make(map[int]net.Conn)
+	groups  = make(map[int][]net.Conn)
 )
 
 
@@ -50,6 +50,31 @@ func readConn(conn net.Conn, i int) {
 
 }
 
+
+func handlePeer(data []string, info []string, sender int) {
+    rec, err := strconv.Atoi(info[1])
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    if rec <= 0 || rec > len(peers) {
+        peers[sender].Write([]byte("Reciever is out of range\n"))
+    } else {
+
+        msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+        peers[rec].Write([]byte(msg))
+    }
+
+}
+
+func handleBroadcast(data []string, sender int){
+    msg := "Client " + strconv.Itoa(sender) + " : " + data[1] + "\n"
+    for conn := range clients {
+        conn.Write([]byte(msg))
+    }
+
+}
+
 func handleConns() {
 	i := 0
 
@@ -68,25 +93,15 @@ func handleConns() {
 			data := strings.Split(strings.TrimSpace(message.msg), ":")
 			info := strings.Split(data[0], " ")
 
-			fmt.Println(data)
-			fmt.Println(info)
-
 			if info[0] == "p" {
-				fmt.Println(data[1])
-				rec, err := strconv.Atoi(info[1])
-				if err != nil {
-					fmt.Println(err)
-				}
-				peers[rec].Write([]byte(data[1]))
+                handlePeer(data, info, message.sender)
 			} else if info[0] == "b" {
-				for conn := range clients {
-					conn.Write([]byte(message.msg))
-				}
+                handleBroadcast(data, message.sender)
 			} else if info[0] == "g" {
 
 			} else {
-                peers[message.sender].Write([]byte("Error parsing message info\n"))
-                fmt.Println("Error parsing message info")
+				peers[message.sender].Write([]byte("Error parsing message info\n"))
+				fmt.Println("Error parsing message info")
 			}
 		case dconn := <-dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
