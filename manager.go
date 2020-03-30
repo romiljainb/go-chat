@@ -68,7 +68,7 @@ func handleConns() {
 			info := strings.Split(data[0], " ")
 
 			if info[0] == "p" {
-				client.sendToPeer(data, info)
+            client.sendToPeer(data, info, &mgr)
 			} else if info[0] == "b" {
 				client.broadcast(data, &mgr)
 			} else if info[0] == "g" {
