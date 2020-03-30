@@ -2,8 +2,6 @@ package main
 
 import (
 	"net"
-	"strconv"
-	"fmt"
 	"bufio"
 	"strings"
 )
@@ -27,26 +25,23 @@ type UserInterface interface {
 }
 
 
-func (client User) broadcast(data []string, mgr *UserMgr ) {
+func (client *User) broadcast(data []string, mgr *UserMgr ) {
 	msg := client.name + ": " + data[1] + "\n"
 	for _, user := range mgr.users{
 		user.uconn.Write([]byte(msg))
 	}
 }
 
-func (sender User) sendToPeer(data []string, info []string ) {
-	rec, err := strconv.Atoi(info[1])
-	if err != nil {
-		fmt.Println(err)
-	}
+func (client *User) sendToPeer(data []string, info []string, mgr *UserMgr) {
+	rec := info[1]
 
-	if rec <= 0 || rec > len(peers) {
-		peers[sender.ID].Write([]byte("Reciever is out of range\n"))
-	} else {
-
-		msg := sender.name + ": " + data[1] + "\n"
-		peers[rec].Write([]byte(msg))
-	}
+    _, exists := mgr.users[rec]
+    if !exists {
+        client.uconn.Write([]byte("User doesnt exist\n"))
+    } else {
+		msg := client.name + ": " + data[1] + "\n"
+        (mgr.users[rec]).uconn.Write([]byte(msg))
+    }
 }
 
 
