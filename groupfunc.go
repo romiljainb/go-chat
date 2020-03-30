@@ -1,32 +1,33 @@
-
 package main
+
 import (
-	"net"
 	"fmt"
+	"net"
 	"strconv"
 )
-func sendToGrp(data []string, info []string, sender User) {
+
+func (client User) sendToGrp(data []string, info []string, mgr *UserMgr) {
 	rec, err := strconv.Atoi(info[1])
 	if err != nil {
 		fmt.Println(err)
 	}
-	if rec <= 0  {
+	if rec <= 0 {
 		fmt.Println("group doesn't exist")
-		sender.uconn.Write([]byte("group doesn't exist"))
+		client.uconn.Write([]byte("group doesn't exist"))
 	} else {
-        value, ok := groups[rec]
+		value, ok := groups[rec]
 		if ok {
-			if existIn(value, sender.uconn) == true {
-				msg := sender.name + " : " + data[1] + "\n"
+			if existIn(value, client.uconn) == true {
+				msg := client.name + " : " + data[1] + "\n"
 				for _, receiver := range groups[rec] {
 					receiver.Write([]byte(msg))
 				}
 			} else {
-				sender.uconn.Write([]byte("not member of group" + "\n"))
-            }
+				client.uconn.Write([]byte("not member of group" + "\n"))
+			}
 
 		} else {
-			sender.uconn.Write([]byte("not member of group"))
+			client.uconn.Write([]byte("not member of group"))
 		}
 
 	}
@@ -94,4 +95,3 @@ func sendMsgToAll(clients []net.Conn, client net.Conn, clientID int) {
 	}
 
 }
-

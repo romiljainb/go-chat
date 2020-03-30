@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net"
 	"fmt"
-	"strings"
+	"net"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -15,22 +15,27 @@ var (
 )
 
 type UserMgr struct {
-    users map[string]User
-    groups map[string][]User
-
+	users   map[string]User
+	groups  map[string][]User
+	conlist map[net.Conn]int
 }
 
 type UserMgrInterface interface {
-    addUser(user User)
-    removeUser(user User)
-    getUser(name string) User
+	addUser(user User)
+	removeUser(user User)
+	getUser(name string) User
 }
 
-func createUser(conn net.Conn, id int) {
+func createUser(conn net.Conn, id int, mgr *UserMgr) {
 	user, created := getUserDetails(conn, id)
 	if created {
+		//old
 		clients[conn] = id
 		peers[id] = conn
+
+		//new
+		mgr.users[user.name] = user
+
 		go readConn(conn, user)
 	}
 
@@ -39,13 +44,15 @@ func createUser(conn net.Conn, id int) {
 func handleConns() {
 	i := 1
 
+	mgr := UserMgr{users: make(map[string]User), groups: make(map[string][]User), conlist: make(map[net.Conn]int)}
+
 	for {
 		select {
 		// read the incoming Messages
 		case conn := <-conns:
 			_, exist := clients[conn]
 			if !exist {
-				createUser(conn, i)
+				createUser(conn, i, &mgr)
 				i++
 			}
 
@@ -54,15 +61,18 @@ func handleConns() {
 			if len(strings.TrimSpace(message.msg)) == 0 {
 				continue
 			}
+
+			client := message.sender
+
 			data := strings.Split(strings.TrimSpace(message.msg), ":")
 			info := strings.Split(data[0], " ")
 
 			if info[0] == "p" {
-				handlePeer(data, info, message.sender)
+            client.sendToPeer(data, info, &mgr)
 			} else if info[0] == "b" {
-				handleBroadcast(data, message.sender)
+				client.broadcast(data, &mgr)
 			} else if info[0] == "g" {
-				sendToGrp(data, info, message.sender)
+				client.sendToGrp(data, info, &mgr)
 
 			} else if info[0] == "j" {
 				groupID, err := strconv.Atoi(info[1])
@@ -76,7 +86,7 @@ func handleConns() {
 					fmt.Println("error occured", err)
 				}
 				leaveGroup(message.sender.uconn, groupID)
-            } else {
+			} else {
 				peers[message.sender.ID].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
 			}
@@ -86,4 +96,3 @@ func handleConns() {
 		}
 	}
 }
-
