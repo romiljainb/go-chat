@@ -27,14 +27,14 @@ type UserInterface interface {
 }
 
 
-func (client User) broadcast(data []string) {
+func (client User) broadcast(data []string, mgr *UserMgr ) {
 	msg := client.name + ": " + data[1] + "\n"
-	for conn := range clients {
-		conn.Write([]byte(msg))
+	for _, user := range mgr.users{
+		user.uconn.Write([]byte(msg))
 	}
 }
 
-func (sender User) sendToPeer(data []string, info []string) {
+func (sender User) sendToPeer(data []string, info []string ) {
 	rec, err := strconv.Atoi(info[1])
 	if err != nil {
 		fmt.Println(err)
