@@ -17,7 +17,7 @@ var (
 type UserMgr struct {
     users map[string]User
     groups map[string][]User
-
+	conlist map[net.Conn]int
 }
 
 type UserMgrInterface interface {
@@ -26,18 +26,27 @@ type UserMgrInterface interface {
     getUser(name string) User
 }
 
-func createUser(conn net.Conn, id int) {
+func createUser(conn net.Conn, id int, mgr *UserMgr) {
 	user, created := getUserDetails(conn, id)
 	if created {
-		clients[conn] = id
+		//old
+        clients[conn] = id
 		peers[id] = conn
+
+        //new
+        mgr.users[user.name] = user
+
 		go readConn(conn, user)
 	}
 
 }
 
+
+
 func handleConns() {
 	i := 1
+
+    mgr := UserMgr{users:make(map[string]User), groups:make(map[string][]User), conlist:make(map[net.Conn]int),}
 
 	for {
 		select {
@@ -45,22 +54,26 @@ func handleConns() {
 		case conn := <-conns:
 			_, exist := clients[conn]
 			if !exist {
-				createUser(conn, i)
+				createUser(conn, i, &mgr)
 				i++
 			}
+
 
 		// msg must be broadcast to everyone
 		case message := <-msgs:
 			if len(strings.TrimSpace(message.msg)) == 0 {
 				continue
 			}
+
+            client := message.sender
+
 			data := strings.Split(strings.TrimSpace(message.msg), ":")
 			info := strings.Split(data[0], " ")
 
 			if info[0] == "p" {
-				handlePeer(data, info, message.sender)
+                client.sendToPeer(data, info)
 			} else if info[0] == "b" {
-				handleBroadcast(data, message.sender)
+                client.broadcast(data, &mgr)
 			} else if info[0] == "g" {
 				sendToGrp(data, info, message.sender)
 
