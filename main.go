@@ -22,7 +22,7 @@ func main() {
 
 	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
 
-	ln, err := net.Listen(strconv.Itoa(server.port), server.serverAddr)
+	ln, err := net.Listen(server.srvType, server.serverAddr)
 	if err != nil {
 		fmt.Println("Error starting server", err.Error())
 	}

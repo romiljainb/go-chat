@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"bufio"
 )
-
 type Message struct {
 	msg    string
 	sender User
 }
-
 type Server struct {
 	ip net.IP
 	port int
