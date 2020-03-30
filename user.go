@@ -6,10 +6,6 @@ import (
 	"strings"
 )
 
-type Message struct {
-	msg    string
-	sender User
-}
 type User struct {
 	name  string
 	ID    int
