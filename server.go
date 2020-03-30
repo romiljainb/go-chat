@@ -17,15 +17,30 @@ type Server struct {
 	srvLevel string
 }
 type SrvInterface interface {
-	Start() error
+	Start() (net.Listener, error)
 	Stop() error
-	AcceptConns() error
+	AcceptConns(srv interface{}) error
 	GetSrvInfo() error
 } 
 
-func (server *Server) acceptConn(ln net.Listener) error {
+// TODO: change net.Listener to something else like interface{} for other servers
+func (server *Server) Start() (net.Listener, error) {
+	ln, err := net.Listen(server.srvType, server.serverAddr)
+	if err != nil {
+		fmt.Println("Error starting server", err.Error())
+		return nil, err
+	}
+	return ln, nil
+}
+
+func (server *Server) Stop() error {
+	return nil
+}
+
+func (server *Server) AcceptConns(ln net.Listener) error {
+
 	for {
-		conn, err := ln.Accept()
+		conn, err := ln.(net.Listener).Accept()
 		if err != nil {
 			fmt.Println(err.Error())
 			return err
