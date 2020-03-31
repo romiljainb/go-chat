@@ -22,14 +22,14 @@ func main() {
 
 	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
 
-	srv, err := server.Start() 
+	srvHandler, err := server.Start() 
 	if err != nil {
 		fmt.Println("Error starting server", err.Error())
 	}
 
 	fmt.Println("Server Starting!!!")
 
-	go server.AcceptConns(srv)
+	go server.AcceptConns(srvHandler)
 	handleConns()
 
 }
