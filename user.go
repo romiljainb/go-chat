@@ -6,10 +6,12 @@ import (
 	"strings"
 )
 
+
 type User struct {
 	name  string
 	ID    int
 	uconn net.Conn
+	//uconn ConnHandler
 }
 
 
@@ -23,8 +25,10 @@ type UserInterface interface {
 
 func (client *User) broadcast(data []string, mgr *UserMgr ) {
 	msg := client.name + ": " + data[1] + "\n"
+	//dataPkt := DataPkt{msg: msg}
 	for _, user := range mgr.users{
 		user.uconn.Write([]byte(msg))
+		//user.uconn.Send(dataPkt)
 	}
 }
 
