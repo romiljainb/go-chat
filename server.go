@@ -16,13 +16,6 @@ type DataPkt struct {
 	msg string
 }
 
-type ConnHandler struct {
-
-}
-
-type ConnInterface interface {
-	Send() error
-}
 
 type Server struct {
 	ip net.IP
@@ -33,11 +26,7 @@ type Server struct {
 }
 
 type TCPServer struct {
-	ip net.IP
-	port int
-	serverAddr string
-	srvType string
-	srvLevel string
+    Server
 }
 
 type SrvInterface interface {
@@ -46,10 +35,6 @@ type SrvInterface interface {
 	AcceptConns(srv interface{}) error
     setSrvAddr(ip *string, port *int)
 	//GetSrvInfo() error
-}
-
-type SrvFactory struct {
-    srvType *string
 }
 
 
@@ -65,15 +50,6 @@ func getServer( port *int, ip *string, serverType *string) (SrvInterface,error) 
     default:
         return nil, errors.New("invalid server type")
     }
-    /*
-        server = Server{
-            ip: net.ParseIP(*ip),
-            port: *port,
-            srvType: *serverType,
-            srvLevel: "simple",
-        }
-    */
-
 }
 
 // TODO: change net.Listener to something else like interface{} for other servers
@@ -85,19 +61,11 @@ func (server *Server) Start() (interface{}, error) {
 	var ln interface{}
 	var err error
 
-	if server.srvType == "tcp" {
-		ln, err = net.Listen(server.srvType, server.serverAddr)
-		if err != nil {
-			fmt.Println("Error starting server", err.Error())
-			return nil, err
-		}
-	} else if server.srvType == "http" {
-
-	} else if server.srvType == "grpc" {
-
-	} else { //default
-
-	}
+    ln, err = net.Listen(server.srvType, server.serverAddr)
+    if err != nil {
+        fmt.Println("Error starting server", err.Error())
+        return nil, err
+    }
 
 	return ln, nil
 }
@@ -143,6 +111,8 @@ func (server *TCPServer) AcceptConns(ln interface{}) error {
 			fmt.Println(err.Error())
 			return err
 		}
+        connh := ConnHandler{connType:"tcp", connInf:conn}
+        connhandles <- connh
 		conns <- conn
 	}
 }
