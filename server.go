@@ -25,6 +25,9 @@ type Server struct {
 	srvLevel string
 }
 
+type HTTPServer struct {
+    Server
+}
 type TCPServer struct {
     Server
 }
@@ -47,6 +50,14 @@ func getServer( port *int, ip *string, serverType *string) (SrvInterface,error) 
         s.srvType = *serverType
         s.srvLevel = "simple"
         return s, nil
+    case "http":
+        s := new(HTTPServer)
+        s.ip = net.ParseIP(*ip)
+        s.port = *port
+        //s.srvType = *serverType
+        s.srvType = "tcp"
+        s.srvLevel = "simple"
+        return s, nil
     default:
         return nil, errors.New("invalid server type")
     }
@@ -56,19 +67,6 @@ func getServer( port *int, ip *string, serverType *string) (SrvInterface,error) 
 // 1. cheapt solution
 // 2. overloading
 // 3. reflection (maybe)
-func (server *Server) Start() (interface{}, error) {
-
-	var ln interface{}
-	var err error
-
-    ln, err = net.Listen(server.srvType, server.serverAddr)
-    if err != nil {
-        fmt.Println("Error starting server", err.Error())
-        return nil, err
-    }
-
-	return ln, nil
-}
 
 func (server *TCPServer) Start() (interface{}, error) {
 
@@ -82,25 +80,14 @@ func (server *TCPServer) Start() (interface{}, error) {
 	return ln, nil
 }
 
-func (server *Server) Stop() error {
-	return nil
-}
 
 func (server *TCPServer) Stop() error {
 	return nil
 }
 
 
-func (server *Server) AcceptConns(ln interface{}) error {
-
-	for {
-		conn, err := ln.(net.Listener).Accept()
-		if err != nil {
-			fmt.Println(err.Error())
-			return err
-		}
-		conns <- conn
-	}
+func (server *TCPServer) setSrvAddr(ip *string, port *int){
+	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
 }
 
 func (server *TCPServer) AcceptConns(ln interface{}) error {
@@ -111,8 +98,45 @@ func (server *TCPServer) AcceptConns(ln interface{}) error {
 			fmt.Println(err.Error())
 			return err
 		}
-        connh := ConnHandler{connType:"tcp", connInf:conn}
-        connhandles <- connh
+        //connh := ConnHandler{connType:"tcp", connInf:conn}
+        //connhandles <- connh
+		conns <- conn
+	}
+}
+
+
+func (server *HTTPServer) Start() (interface{}, error) {
+
+	var ln interface{}
+	var err error
+    ln, err = net.Listen(server.srvType, server.serverAddr)
+    if err != nil {
+        fmt.Println("Error starting server", err.Error())
+        return nil, err
+    }
+	return ln, nil
+}
+
+
+func (server *HTTPServer) Stop() error {
+	return nil
+}
+
+
+func (server *HTTPServer) setSrvAddr(ip *string, port *int){
+	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
+}
+
+func (server *HTTPServer) AcceptConns(ln interface{}) error {
+
+	for {
+		conn, err := ln.(net.Listener).Accept()
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+        //connh := ConnHandler{connType:"tcp", connInf:conn}
+        //connhandles <- connh
 		conns <- conn
 	}
 }
@@ -132,10 +156,4 @@ func readConn(conn net.Conn, user User) {
 
 }
 
-func (server *Server) setSrvAddr(ip *string, port *int){
-	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
-}
 
-func (server *TCPServer) setSrvAddr(ip *string, port *int){
-	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
-}
