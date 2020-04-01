@@ -26,6 +26,19 @@ type UserMgrInterface interface {
 	getUser(name string) User
 }
 
+type ConnHandler struct {
+    connType string
+    connInf interface{}
+}
+
+type netConn struct {
+
+}
+
+type ConnInterface interface {
+	Send() error
+}
+
 func createUser(conn net.Conn, id int, mgr *UserMgr) {
 	user, created := getUserDetails(conn, id)
 	if created {
