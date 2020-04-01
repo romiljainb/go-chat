@@ -4,6 +4,8 @@ import (
 	"net"
 	"fmt"
 	"bufio"
+	"errors"
+	"strconv"
 )
 type Message struct {
 	msg    string
@@ -29,12 +31,50 @@ type Server struct {
 	srvType string
 	srvLevel string
 }
+
+type TCPServer struct {
+	ip net.IP
+	port int
+	serverAddr string
+	srvType string
+	srvLevel string
+}
+
 type SrvInterface interface {
 	Start() (interface{}, error)
 	Stop() error
 	AcceptConns(srv interface{}) error
-	GetSrvInfo() error
-} 
+    setSrvAddr(ip *string, port *int)
+	//GetSrvInfo() error
+}
+
+type SrvFactory struct {
+    srvType *string
+}
+
+
+func getServer( port *int, ip *string, serverType *string) (SrvInterface,error) {
+    switch *serverType{
+    case "tcp":
+        s := new(TCPServer)
+        s.ip = net.ParseIP(*ip)
+        s.port = *port
+        s.srvType = *serverType
+        s.srvLevel = "simple"
+        return s, nil
+    default:
+        return nil, errors.New("invalid server type")
+    }
+    /*
+        server = Server{
+            ip: net.ParseIP(*ip),
+            port: *port,
+            srvType: *serverType,
+            srvLevel: "simple",
+        }
+    */
+
+}
 
 // TODO: change net.Listener to something else like interface{} for other servers
 // 1. cheapt solution
@@ -62,11 +102,40 @@ func (server *Server) Start() (interface{}, error) {
 	return ln, nil
 }
 
+func (server *TCPServer) Start() (interface{}, error) {
+
+	var ln interface{}
+	var err error
+    ln, err = net.Listen(server.srvType, server.serverAddr)
+    if err != nil {
+        fmt.Println("Error starting server", err.Error())
+        return nil, err
+    }
+	return ln, nil
+}
+
 func (server *Server) Stop() error {
 	return nil
 }
 
+func (server *TCPServer) Stop() error {
+	return nil
+}
+
+
 func (server *Server) AcceptConns(ln interface{}) error {
+
+	for {
+		conn, err := ln.(net.Listener).Accept()
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+		conns <- conn
+	}
+}
+
+func (server *TCPServer) AcceptConns(ln interface{}) error {
 
 	for {
 		conn, err := ln.(net.Listener).Accept()
@@ -91,4 +160,12 @@ func readConn(conn net.Conn, user User) {
 	}
 	dconns <- conn
 
+}
+
+func (server *Server) setSrvAddr(ip *string, port *int){
+	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
+}
+
+func (server *TCPServer) setSrvAddr(ip *string, port *int){
+	server.serverAddr = *ip + ":" + strconv.Itoa(*port)
 }
