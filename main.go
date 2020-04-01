@@ -9,7 +9,7 @@ func main() {
 
 	port := flag.Int("port", 8080, "a port number")
 	ip := flag.String("ip", "127.0.0.1", "a ip string")
-	serverType := flag.String("type", "tcp", "a server type string")
+	serverType := flag.String("type", "http", "a server type string")
 
     server, err := getServer(port, ip, serverType)
     if err != nil {
