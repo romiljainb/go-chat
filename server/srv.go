@@ -3,14 +3,10 @@ package main
 import (
 	"net"
 	"fmt"
-	"bufio"
 	"errors"
 	"strconv"
+	connH "github.com/romiljainb/lets-go/connections"
 )
-type Message struct {
-	msg    string
-	sender User
-}
 
 type DataPkt struct {
 	msg string
@@ -100,7 +96,7 @@ func (server *TCPServer) AcceptConns(ln interface{}) error {
 		}
         //connh := ConnHandler{connType:"tcp", connInf:conn}
         //connhandles <- connh
-		conns <- conn
+		connH.Conns <- conn
 	}
 }
 
@@ -137,23 +133,9 @@ func (server *HTTPServer) AcceptConns(ln interface{}) error {
 		}
         //connh := ConnHandler{connType:"tcp", connInf:conn}
         //connhandles <- connh
-		conns <- conn
+		connH.Conns <- conn
 	}
 }
 
-func readConn(conn net.Conn, user User) {
-	rd := bufio.NewReader(conn)
-	for {
-		m, err := rd.ReadString('\n')
-		if err != nil {
-			break
-		}
-
-		mdata := Message{msg: m, sender: user}
-		msgs <- mdata
-	}
-	dconns <- conn
-
-}
 
 

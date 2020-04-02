@@ -1,10 +1,12 @@
-package main
+package chat
 
 import (
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
+	"bufio"
+	connH "github.com/romiljainb/lets-go/connections"
 )
 
 var (
@@ -26,19 +28,6 @@ type UserMgrInterface interface {
 	getUser(name string) User
 }
 
-type ConnHandler struct {
-    connType string
-    connInf interface{}
-}
-
-type netConn struct {
-
-}
-
-type ConnInterface interface {
-	Send() error
-}
-
 func createUser(conn net.Conn, id int, mgr *UserMgr) {
 	user, created := getUserDetails(conn, id)
 	if created {
@@ -54,7 +43,7 @@ func createUser(conn net.Conn, id int, mgr *UserMgr) {
 
 }
 
-func handleConns() {
+func HandleConns() {
 	i := 1
 
 	mgr := UserMgr{users: make(map[string]User), groups: make(map[string][]User), conlist: make(map[net.Conn]int)}
@@ -62,7 +51,7 @@ func handleConns() {
 	for {
 		select {
 		// read the incoming Messages
-		case conn := <-conns:
+		case conn := <- connH.Conns:
 			_, exist := clients[conn]
 			if !exist {
 				createUser(conn, i, &mgr)
@@ -103,9 +92,24 @@ func handleConns() {
 				peers[message.sender.ID].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
 			}
-		case dconn := <-dconns:
+		case dconn := <-connH.Dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
 			delete(clients, dconn)
 		}
 	}
+}
+
+func readConn(conn net.Conn, user User) {
+	rd := bufio.NewReader(conn)
+	for {
+		m, err := rd.ReadString('\n')
+		if err != nil {
+			break
+		}
+
+		mdata := Message{msg: m, sender: user}
+		msgs <- mdata
+	}
+	connH.Dconns <- conn
+
 }
