@@ -3,14 +3,11 @@ package main
 import (
 	"net"
 	"fmt"
-	"bufio"
 	"errors"
 	"strconv"
+	"github.com/romiljainb/lets-go/chat"
+	"github.com/romiljainb/lets-go/connections"
 )
-type Message struct {
-	msg    string
-	sender User
-}
 
 type DataPkt struct {
 	msg string
@@ -141,19 +138,5 @@ func (server *HTTPServer) AcceptConns(ln interface{}) error {
 	}
 }
 
-func readConn(conn net.Conn, user User) {
-	rd := bufio.NewReader(conn)
-	for {
-		m, err := rd.ReadString('\n')
-		if err != nil {
-			break
-		}
-
-		mdata := Message{msg: m, sender: user}
-		msgs <- mdata
-	}
-	dconns <- conn
-
-}
 
 

@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+    "github.com/romiljainb/lets-go/chat"
+    "github.com/romiljainb/lets-go/connections"
 )
 
 func main() {

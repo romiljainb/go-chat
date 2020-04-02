@@ -1,10 +1,16 @@
-package main
+package chat
 
 import (
 	"net"
 	"bufio"
 	"strings"
+	"github.com/romiljainb/lets-go/connections"
 )
+
+type Message struct {
+	msg    string
+	sender User
+}
 
 
 type User struct {
@@ -20,28 +26,6 @@ type UserInterface interface {
     sendToPeer(peer string)
     leaveGroup(group string)
     joinGroup(group string)
-}
-
-
-func (client *User) broadcast(data []string, mgr *UserMgr ) {
-	msg := client.name + ": " + data[1] + "\n"
-	//dataPkt := DataPkt{msg: msg}
-	for _, user := range mgr.users{
-		user.uconn.Write([]byte(msg))
-		//user.uconn.Send(dataPkt)
-	}
-}
-
-func (client *User) sendToPeer(data []string, info []string, mgr *UserMgr) {
-	rec := info[1]
-
-    _, exists := mgr.users[rec]
-    if !exists {
-        client.uconn.Write([]byte("User doesnt exist\n"))
-    } else {
-		msg := client.name + ": " + data[1] + "\n"
-        (mgr.users[rec]).uconn.Write([]byte(msg))
-    }
 }
 
 

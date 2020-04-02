@@ -1,10 +1,11 @@
-package main
+package chat
 
 import (
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
+	"github.com/romiljainb/lets-go/connections"
 )
 
 var (
@@ -24,19 +25,6 @@ type UserMgrInterface interface {
 	addUser(user User)
 	removeUser(user User)
 	getUser(name string) User
-}
-
-type ConnHandler struct {
-    connType string
-    connInf interface{}
-}
-
-type netConn struct {
-
-}
-
-type ConnInterface interface {
-	Send() error
 }
 
 func createUser(conn net.Conn, id int, mgr *UserMgr) {
@@ -108,4 +96,19 @@ func handleConns() {
 			delete(clients, dconn)
 		}
 	}
+}
+
+func readConn(conn net.Conn, user User) {
+	rd := bufio.NewReader(conn)
+	for {
+		m, err := rd.ReadString('\n')
+		if err != nil {
+			break
+		}
+
+		mdata := Message{msg: m, sender: user}
+		msgs <- mdata
+	}
+	dconns <- conn
+
 }

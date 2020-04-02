@@ -1,9 +1,10 @@
-package main
+package chat
 
 import (
 	"fmt"
 	"net"
 	"strconv"
+	"github.com/romiljainb/lets-go/connections"
 )
 
 func (client User) sendToGrp(data []string, info []string, mgr *UserMgr) {
@@ -95,3 +96,5 @@ func sendMsgToAll(clients []net.Conn, client net.Conn, clientID int) {
 	}
 
 }
+
+
