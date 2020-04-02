@@ -1,7 +1,7 @@
 package chat
 
 import (
-	"github.com/romiljainb/lets-go/connections"
+	//"github.com/romiljainb/lets-go/connections"
 )
 
 func (client *User) broadcast(data []string, mgr *UserMgr ) {

@@ -4,8 +4,10 @@ import (
 	"net"
 	"bufio"
 	"strings"
-	"github.com/romiljainb/lets-go/connections"
+	//connH "github.com/romiljainb/lets-go/connections"
 )
+
+var msgs = make(chan Message)
 
 type Message struct {
 	msg    string

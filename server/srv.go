@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"errors"
 	"strconv"
-	"github.com/romiljainb/lets-go/chat"
-	"github.com/romiljainb/lets-go/connections"
+	connH "github.com/romiljainb/lets-go/connections"
 )
 
 type DataPkt struct {
@@ -97,7 +96,7 @@ func (server *TCPServer) AcceptConns(ln interface{}) error {
 		}
         //connh := ConnHandler{connType:"tcp", connInf:conn}
         //connhandles <- connh
-		conns <- conn
+		connH.Conns <- conn
 	}
 }
 
@@ -134,7 +133,7 @@ func (server *HTTPServer) AcceptConns(ln interface{}) error {
 		}
         //connh := ConnHandler{connType:"tcp", connInf:conn}
         //connhandles <- connh
-		conns <- conn
+		connH.Conns <- conn
 	}
 }
 

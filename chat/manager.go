@@ -5,7 +5,8 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"github.com/romiljainb/lets-go/connections"
+	"bufio"
+	connH "github.com/romiljainb/lets-go/connections"
 )
 
 var (
@@ -42,7 +43,7 @@ func createUser(conn net.Conn, id int, mgr *UserMgr) {
 
 }
 
-func handleConns() {
+func HandleConns() {
 	i := 1
 
 	mgr := UserMgr{users: make(map[string]User), groups: make(map[string][]User), conlist: make(map[net.Conn]int)}
@@ -50,7 +51,7 @@ func handleConns() {
 	for {
 		select {
 		// read the incoming Messages
-		case conn := <-conns:
+		case conn := <- connH.Conns:
 			_, exist := clients[conn]
 			if !exist {
 				createUser(conn, i, &mgr)
@@ -91,7 +92,7 @@ func handleConns() {
 				peers[message.sender.ID].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
 			}
-		case dconn := <-dconns:
+		case dconn := <-connH.Dconns:
 			fmt.Println("Clinet %v logged off", clients[dconn])
 			delete(clients, dconn)
 		}
@@ -109,6 +110,6 @@ func readConn(conn net.Conn, user User) {
 		mdata := Message{msg: m, sender: user}
 		msgs <- mdata
 	}
-	dconns <- conn
+	connH.Dconns <- conn
 
 }

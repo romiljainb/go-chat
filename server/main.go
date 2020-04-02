@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-    "github.com/romiljainb/lets-go/chat"
-    "github.com/romiljainb/lets-go/connections"
+    chat "github.com/romiljainb/lets-go/chat"
+    //"github.com/romiljainb/lets-go/connections"
 )
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 	fmt.Println("Server Starting!!!")
 
 	go server.AcceptConns(srvHandler)
-	handleConns()
+	chat.HandleConns()
 
 }
 

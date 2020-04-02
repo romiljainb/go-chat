@@ -5,8 +5,7 @@ import (
 )
 
 var (
-	conns   = make(chan net.Conn)
-	connhandles   = make(chan ConnHandler)
-	dconns  = make(chan net.Conn)
-	msgs    = make(chan Message)
+	Conns   	= make(chan net.Conn)
+	Connhandles = make(chan ConnHandler)
+	Dconns  	= make(chan net.Conn)
 )
