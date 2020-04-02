@@ -1,11 +1,9 @@
 run:
-	#go build -o chat main.go manager.go user.go groupfunc.go server consts.go
-	#go build -o chat main.go manager.go user.go groupfunc.go server/server.go consts.go
-	go build -o chat *.go 
-	./chat
+	go build -o chats server/*.go 
+	./chats
 
 build:
-	go build -o chat main.go manager.go user.go groupfunc.go server consts.go
+	go build -o chats server/*.go
 
 clean:
-	rm chat
+	rm chats
