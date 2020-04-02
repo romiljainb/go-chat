@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	//"github.com/romiljainb/lets-go/connections"
 )
 
 func (client User) sendToGrp(data []string, info []string, mgr *UserMgr) {
