@@ -8,11 +8,6 @@ import (
 	connH "github.com/romiljainb/lets-go/connections"
 )
 
-type DataPkt struct {
-	msg string
-}
-
-
 type Server struct {
 	ip net.IP
 	port int
@@ -50,19 +45,13 @@ func getServer( port *int, ip *string, serverType *string) (SrvInterface,error) 
         s := new(HTTPServer)
         s.ip = net.ParseIP(*ip)
         s.port = *port
-        //s.srvType = *serverType
-        s.srvType = "tcp"
-        s.srvLevel = "simple"
+        s.srvType = *serverType
+        s.srvLevel = "adv" //non tcp servers will not be simple
         return s, nil
     default:
         return nil, errors.New("invalid server type")
     }
 }
-
-// TODO: change net.Listener to something else like interface{} for other servers
-// 1. cheapt solution
-// 2. overloading
-// 3. reflection (maybe)
 
 func (server *TCPServer) Start() (interface{}, error) {
 

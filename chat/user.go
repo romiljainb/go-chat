@@ -4,22 +4,24 @@ import (
 	"net"
 	"bufio"
 	"strings"
-	//connH "github.com/romiljainb/lets-go/connections"
+	"time"
+	connH "github.com/romiljainb/lets-go/connections"
 )
 
-var msgs = make(chan Message)
+var msgs = make(chan DataPkt)
 
-type Message struct {
-	msg    string
+type DataPkt struct {
+	msg string
 	sender User
+	msgSent time.Time
+	msgOrigin string
 }
-
 
 type User struct {
 	name  string
 	ID    int
 	uconn net.Conn
-	//uconn ConnHandler
+	uconnHandler connH.ConnHandler
 }
 
 

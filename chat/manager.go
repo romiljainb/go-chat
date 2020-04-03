@@ -59,14 +59,14 @@ func HandleConns() {
 			}
 
 		// msg must be broadcast to everyone
-		case message := <-msgs:
-			if len(strings.TrimSpace(message.msg)) == 0 {
+		case dataPkt := <-msgs:
+			if len(strings.TrimSpace(dataPkt.msg)) == 0 {
 				continue
 			}
 
-			client := message.sender
+			client := dataPkt.sender
 
-			data := strings.Split(strings.TrimSpace(message.msg), ":")
+			data := strings.Split(strings.TrimSpace(dataPkt.msg), ":")
 			info := strings.Split(data[0], " ")
 
 			if info[0] == "p" {
@@ -81,15 +81,15 @@ func HandleConns() {
 				if err != nil {
 					fmt.Println("error occured", err)
 				}
-				joinGroup(message.sender.uconn, groupID)
+				joinGroup(dataPkt.sender.uconn, groupID)
 			} else if info[0] == "l" {
 				groupID, err := strconv.Atoi(info[1])
 				if err != nil {
 					fmt.Println("error occured", err)
 				}
-				leaveGroup(message.sender.uconn, groupID)
+				leaveGroup(dataPkt.sender.uconn, groupID)
 			} else {
-				peers[message.sender.ID].Write([]byte("Error parsing message info\n"))
+				peers[dataPkt.sender.ID].Write([]byte("Error parsing message info\n"))
 				fmt.Println("Error parsing message info")
 			}
 		case dconn := <-connH.Dconns:
@@ -107,8 +107,8 @@ func readConn(conn net.Conn, user User) {
 			break
 		}
 
-		mdata := Message{msg: m, sender: user}
-		msgs <- mdata
+		dataPkt := DataPkt{msg: m, sender: user}
+		msgs <- dataPkt
 	}
 	connH.Dconns <- conn
 
