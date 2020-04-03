@@ -58,6 +58,9 @@ func HandleConns() {
 				i++
 			}
 
+        case connhandel := <- connH.Connhandles:
+            fmt.Println(connhandel)
+
 		// msg must be broadcast to everyone
 		case dataPkt := <-msgs:
 			if len(strings.TrimSpace(dataPkt.msg)) == 0 {

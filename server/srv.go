@@ -83,8 +83,8 @@ func (server *TCPServer) AcceptConns(ln interface{}) error {
 			fmt.Println(err.Error())
 			return err
 		}
-        //connh := ConnHandler{connType:"tcp", connInf:conn}
-        //connhandles <- connh
+        connh := ConnHandler{connType:"tcp", connInf:conn}
+        connH.Connhandles <- connh
 		connH.Conns <- conn
 	}
 }

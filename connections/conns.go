@@ -3,15 +3,16 @@ package connections
 import (
 )
 
+type ConnInterface interface {
+	Send() error
+}
+
 type ConnHandler struct {
     connType string
-    connInf interface{}
+    connInf ConnInterface
 }
 
 type netConn struct {
 
 }
 
-type ConnInterface interface {
-	Send() error
-}
